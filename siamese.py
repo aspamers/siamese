@@ -54,7 +54,27 @@ class SiameseNetwork:
         """
         self.siamese_model.compile(*args, **kwargs)
 
-    def fit_generator(self, x_train, y_train, x_test, y_test, num_positive_pairs, num_negative_pairs, *args, **kwargs):
+    def fit(self, *args, **kwargs):
+        """
+        Trains the model on data generated batch-by-batch using the siamese network generator function.
+
+        Redirects arguments to the fit_generator function.
+        """
+        x_train = args[0]
+        y_train = args[1]
+        x_test, y_test = kwargs.pop('validation_data')
+        batch_size = kwargs.pop('batch_size')
+
+        train_generator = self.__pair_generator(x_train, y_train, batch_size)
+        train_steps = len(x_train) / batch_size
+        test_generator = self.__pair_generator(x_test, y_test, batch_size)
+        test_steps = len(x_test) / batch_size
+        self.siamese_model.fit_generator(train_generator,
+                                         steps_per_epoch=train_steps,
+                                         validation_data=test_generator,
+                                         validation_steps=test_steps, **kwargs)
+
+    def fit_generator(self, x_train, y_train, x_test, y_test, batch_size, *args, **kwargs):
         """
         Trains the model on data generated batch-by-batch using the siamese network generator function.
 
@@ -62,14 +82,12 @@ class SiameseNetwork:
         :param y_train: Training output data.
         :param x_test: Validation input data.
         :param y_test: Validation output data.
-        :param num_positive_pairs: Number of positive pairs to generate per batch.
-        :param num_negative_pairs: Number of negative pairs to generate per batch.
+        :param batch_size: Number of pairs to generate per batch.
         """
-        total_pairs = num_positive_pairs + num_negative_pairs
-        train_generator = self.__pair_generator(x_train, y_train, num_positive_pairs, num_negative_pairs)
-        train_steps = len(x_train) / total_pairs
-        test_generator = self.__pair_generator(x_test, y_test, num_positive_pairs, num_negative_pairs)
-        test_steps = len(x_test) / total_pairs
+        train_generator = self.__pair_generator(x_train, y_train, batch_size)
+        train_steps = len(x_train) / batch_size
+        test_generator = self.__pair_generator(x_test, y_test, batch_size)
+        test_steps = len(x_test) / batch_size
         self.siamese_model.fit_generator(train_generator,
                                          steps_per_epoch=train_steps,
                                          validation_data=test_generator,
@@ -84,20 +102,35 @@ class SiameseNetwork:
         """
         self.siamese_model.load_weights(checkpoint_path)
 
-    def evaluate_generator(self, x, y, num_positive_pairs, num_negative_pairs, *args, **kwargs):
+    def evaluate(self, *args, **kwargs):
+        """
+        Evaluate the siamese network with the same generator that is used to train it. Passes arguments through to the
+        underlying Keras function so that callbacks etc can be used.
+
+        Redirects arguments to the evaluate_generator function.
+
+        :return: A tuple of scores
+        """
+        x = args[0]
+        y = args[1]
+        batch_size = kwargs.pop('batch_size')
+
+        generator = self.__pair_generator(x, y, batch_size)
+        steps = len(x) / batch_size
+        return self.siamese_model.evaluate_generator(generator, steps=steps, **kwargs)
+
+    def evaluate_generator(self, x, y, batch_size, *args, **kwargs):
         """
         Evaluate the siamese network with the same generator that is used to train it. Passes arguments through to the
         underlying Keras function so that callbacks etc can be used.
 
         :param x: Input data
         :param y: Class labels
-        :param num_positive_pairs: Number of positive pairs to generate per batch.
-        :param num_negative_pairs: Number of negative pairs to generate per batch.
+        :param batch_size: Number of pairs to generate per batch.
         :return: A tuple of scores
         """
-        total_pairs = num_positive_pairs + num_negative_pairs
-        generator = self.__pair_generator(x, y, num_positive_pairs, num_negative_pairs)
-        steps = len(x) / total_pairs
+        generator = self.__pair_generator(x, y, batch_size=batch_size)
+        steps = len(x) / batch_size
         return self.siamese_model.evaluate_generator(generator, steps=steps, *args, **kwargs)
 
     def __initialize_siamese_model(self):
@@ -113,7 +146,7 @@ class SiameseNetwork:
         head = self.head_model([processed_a, processed_b])
         self.siamese_model = Model([input_a, input_b], head)
 
-    def __create_pairs(self, x, class_indices, num_positive_pairs, num_negative_pairs):
+    def __create_pairs(self, x, class_indices, batch_size):
         """
         Create a numpy array of positive and negative pairs and their associated labels.
 
@@ -123,12 +156,12 @@ class SiameseNetwork:
         * Example usage:
         * element_index = class_indices[class][index]
         * element = x[element_index]
-        :param num_positive_pairs: The number of positive pair samples to create.
-        :param num_negative_pairs: The number of negative pair samples to create.
+        :param batch_size: The number of pair samples to create.
         :return: A tuple of (Numpy array of pairs, Numpy array of labels)
         """
-        positive_pairs, positive_labels = self.__create_positive_pairs(x, class_indices, num_positive_pairs)
-        negative_pairs, negative_labels = self.__create_negative_pairs(x, class_indices, num_negative_pairs)
+        num_pairs = batch_size / 2
+        positive_pairs, positive_labels = self.__create_positive_pairs(x, class_indices, num_pairs)
+        negative_pairs, negative_labels = self.__create_negative_pairs(x, class_indices, num_pairs)
         return np.array(positive_pairs + negative_pairs), np.array(positive_labels + negative_labels)
 
     def __create_positive_pairs(self, x, class_indices, num_positive_pairs):
@@ -184,24 +217,20 @@ class SiameseNetwork:
             negative_labels.append([0.0])
         return negative_pairs, negative_labels
 
-    def __pair_generator(self, x, y, num_positive_pairs, num_negative_pairs):
+    def __pair_generator(self, x, y, batch_size):
         """
         Creates a python generator that produces pairs from the original input data.
         :param x: Input data
         :param y: Integer class labels
-        :param num_positive_pairs: The number of positive pair samples to create per batch.
-        :param num_negative_pairs: The number of negative pair samples to create per batch.
+        :param batch_size: The number of pair samples to create per batch.
         :return:
         """
         class_indices = self.__get_class_indices(y)
         while True:
-            mixed_pairs, mixed_labels = self.__create_pairs(x,
-                                                            class_indices,
-                                                            num_positive_pairs,
-                                                            num_negative_pairs)
+            pairs, labels = self.__create_pairs(x, class_indices, batch_size)
 
             # The siamese network expects two inputs and one output. Split the pairs into a list of inputs.
-            yield [mixed_pairs[:, 0], mixed_pairs[:, 1]], mixed_labels
+            yield [pairs[:, 0], pairs[:, 1]], labels
 
     def __get_class_indices(self, y):
         """

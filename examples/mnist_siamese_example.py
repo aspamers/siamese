@@ -99,13 +99,11 @@ siamese_callbacks = [
     ModelCheckpoint(siamese_checkpoint_path, monitor='val_acc', save_best_only=True, verbose=0)
 ]
 
-siamese_network.fit_generator(x_train, y_train,
-                              x_test, y_test,
-                              num_positive_pairs=500,
-                              num_negative_pairs=500,
-                              epochs=epochs,
-                              callbacks=siamese_callbacks,
-                              max_queue_size=20)
+siamese_network.fit(x_train, y_train,
+                    validation_data=(x_test, y_test),
+                    batch_size=1000,
+                    epochs=epochs,
+                    callbacks=siamese_callbacks)
 
 siamese_network.load_weights(siamese_checkpoint_path)
 embedding = base_model.outputs[-1]
