@@ -13,13 +13,16 @@ network is useful.
 """
 
 from __future__ import print_function
+
+import tensorflow as tf
 import keras
 from keras.datasets import mnist
+from keras.engine import Layer
 from keras.layers import Conv2D, MaxPooling2D, BatchNormalization, Activation, Concatenate
 from keras import backend as K
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from keras.models import Model
-from keras.layers import Input, Flatten, Dense
+from keras.layers import Flatten, Dense
 
 from siamese import SiameseNetwork
 
@@ -48,49 +51,47 @@ x_train /= 255
 x_test /= 255
 
 
-def create_base_model(input_shape):
-    model_input = Input(shape=input_shape)
+class BaseModel(Layer):
 
-    embedding = Conv2D(32, kernel_size=(3, 3), input_shape=input_shape)(model_input)
-    embedding = BatchNormalization()(embedding)
-    embedding = Activation(activation='relu')(embedding)
-    embedding = MaxPooling2D(pool_size=(2, 2))(embedding)
-    embedding = Conv2D(64, kernel_size=(3, 3))(embedding)
-    embedding = BatchNormalization()(embedding)
-    embedding = Activation(activation='relu')(embedding)
-    embedding = MaxPooling2D(pool_size=(2, 2))(embedding)
-    embedding = Flatten()(embedding)
-    embedding = Dense(128)(embedding)
-    embedding = BatchNormalization()(embedding)
-    embedding = Activation(activation='relu')(embedding)
+    def call(self, inputs):
 
-    return Model(model_input, embedding)
+        base = Conv2D(32, kernel_size=(3, 3), input_shape=input_shape)(inputs)
+        base = BatchNormalization()(base)
+        base = Activation(activation='relu')(base)
+        base = MaxPooling2D(pool_size=(2, 2))(base)
+        base = Conv2D(64, kernel_size=(3, 3))(base)
+        base = BatchNormalization()(base)
+        base = Activation(activation='relu')(base)
+        base = MaxPooling2D(pool_size=(2, 2))(base)
+        base = Flatten()(base)
+        base = Dense(128)(base)
+        base = BatchNormalization()(base)
+        base = Activation(activation='relu')(base)
+
+        return base
 
 
-def create_head_model(embedding_shape):
-    embedding_a = Input(shape=embedding_shape)
-    embedding_b = Input(shape=embedding_shape)
+class HeadModel(Layer):
 
-    head = Concatenate()([embedding_a, embedding_b])
-    head = Dense(8)(head)
-    head = BatchNormalization()(head)
-    head = Activation(activation='sigmoid')(head)
+    def call(self, inputs):
 
-    head = Dense(1)(head)
-    head = BatchNormalization()(head)
-    head = Activation(activation='sigmoid')(head)
+        head = Concatenate()(inputs)
+        head = Dense(8)(head)
+        head = BatchNormalization()(head)
+        head = Activation(activation='sigmoid')(head)
 
-    return Model([embedding_a, embedding_b], head)
+        head = Dense(1)(head)
+        head = BatchNormalization()(head)
+        head = Activation(activation='sigmoid')(head)
+
+        return head
 
 
 num_classes = 10
 epochs = 999999
 
-base_model = create_base_model(input_shape)
-head_model = create_head_model(base_model.output_shape)
-
-siamese_network = SiameseNetwork(base_model, head_model, num_classes)
-siamese_network.compile(loss='binary_crossentropy', optimizer=keras.optimizers.adam(), metrics=['accuracy'])
+siamese_network = SiameseNetwork(BaseModel, HeadModel, num_classes)
+siamese_network.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
 siamese_checkpoint_path = "./siamese_checkpoint"
 
@@ -101,8 +102,7 @@ siamese_callbacks = [
 
 siamese_network.fit_generator(x_train, y_train,
                               x_test, y_test,
-                              num_positive_pairs=500,
-                              num_negative_pairs=500,
+                              batch_size=1000,
                               epochs=epochs,
                               callbacks=siamese_callbacks,
                               max_queue_size=20)
