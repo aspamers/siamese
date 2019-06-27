@@ -66,9 +66,9 @@ class SiameseNetwork:
         batch_size = kwargs.pop('batch_size')
 
         train_generator = self.__pair_generator(x_train, y_train, batch_size)
-        train_steps = len(x_train) / batch_size
+        train_steps = max(len(x_train) / batch_size, 1)
         test_generator = self.__pair_generator(x_test, y_test, batch_size)
-        test_steps = len(x_test) / batch_size
+        test_steps = max(len(x_test) / batch_size, 1)
         self.siamese_model.fit_generator(train_generator,
                                          steps_per_epoch=train_steps,
                                          validation_data=test_generator,
@@ -85,9 +85,9 @@ class SiameseNetwork:
         :param batch_size: Number of pairs to generate per batch.
         """
         train_generator = self.__pair_generator(x_train, y_train, batch_size)
-        train_steps = len(x_train) / batch_size
+        train_steps = max(len(x_train) / batch_size, 1)
         test_generator = self.__pair_generator(x_test, y_test, batch_size)
-        test_steps = len(x_test) / batch_size
+        test_steps = max(len(x_test) / batch_size, 1)
         self.siamese_model.fit_generator(train_generator,
                                          steps_per_epoch=train_steps,
                                          validation_data=test_generator,
@@ -179,7 +179,7 @@ class SiameseNetwork:
         """
         positive_pairs = []
         positive_labels = []
-        for sample in range(num_positive_pairs):
+        for _ in range(num_positive_pairs):
             class_1 = random.randint(0, self.num_classes - 1)
             num_elements = len(class_indices[class_1])
 
@@ -206,7 +206,7 @@ class SiameseNetwork:
         negative_pairs = []
         negative_labels = []
 
-        for sample in range(num_negative_pairs):
+        for _ in range(num_negative_pairs):
             cls_1, cls_2 = self.__randint_unequal(0, self.num_classes - 1)
 
             index_1 = random.randint(0, len(class_indices[cls_1]) - 1)
