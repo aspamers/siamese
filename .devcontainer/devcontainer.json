@@ -1,0 +1,10 @@
+{
+    "name": "siamese",
+    "dockerFile": "../Dockerfile",
+    "runArgs": [
+        "--runtime=nvidia"
+    ],
+    "extensions": [
+        "ms-python.python"
+    ]
+}
