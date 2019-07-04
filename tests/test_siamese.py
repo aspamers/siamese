@@ -13,12 +13,13 @@ from siamese import SiameseNetwork
 
 def test_siamese():
     """
-    Test that all components the siamese network work correctly by executing a training run against generated data.
+    Test that all components the siamese network work correctly by executing a
+    training run against generated data.
     """
 
     num_classes = 5
     input_shape = (3,)
-    epochs = 10
+    epochs = 1000
 
     # Generate some data
     x_train = np.random.rand(100, 3)
@@ -58,10 +59,13 @@ def test_siamese():
     siamese_network = SiameseNetwork(base_model, head_model, num_classes)
 
     # Prepare siamese network for training
-    siamese_network.compile(loss='binary_crossentropy', optimizer=keras.optimizers.adam())
+    siamese_network.compile(loss='binary_crossentropy',
+                            optimizer=keras.optimizers.adam())
 
     # Evaluate network before training to establish a baseline
-    score_before = siamese_network.evaluate_generator(x_train, y_train, batch_size=64)
+    score_before = siamese_network.evaluate_generator(
+        x_train, y_train, batch_size=64
+    )
 
     # Train network
     siamese_network.fit(x_train, y_train,
@@ -73,4 +77,4 @@ def test_siamese():
     score_after = siamese_network.evaluate(x_train, y_train, batch_size=64)
 
     # Ensure that the training loss score improved as a result of the training
-    assert(score_before < score_after)
+    assert(score_before > score_after)

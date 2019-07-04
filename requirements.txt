@@ -1,4 +1,4 @@
-keras
-numpy
-pytest
-pep8
+keras==2.2.4
+numpy==1.16.4
+pytest==4.6.4  
+pep8==1.7.1

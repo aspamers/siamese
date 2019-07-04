@@ -2,7 +2,8 @@
 This is a modified version of the Keras mnist example.
 https://keras.io/examples/mnist_cnn/
 
-Instead of using a fixed number of epochs this version continues to train until the stop criteria is reached.
+Instead of using a fixed number of epochs this version continues to train
+until the stop criteria is reached.
 
 Model performance should be around 99.4% after training.
 """
@@ -74,7 +75,10 @@ checkpoint_path = "./checkpoint"
 
 callbacks = [
     EarlyStopping(monitor='val_acc', patience=10, verbose=0),
-    ModelCheckpoint(checkpoint_path, monitor='val_acc', save_best_only=True, verbose=0)
+    ModelCheckpoint(checkpoint_path,
+                    monitor='val_acc',
+                    save_best_only=True,
+                    verbose=0)
 ]
 model.fit(x_train, y_train,
           batch_size=batch_size,
