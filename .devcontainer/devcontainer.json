@@ -1,10 +1,15 @@
 {
     "name": "siamese",
-    "dockerFile": "../Dockerfile",
+    "dockerComposeFile": "docker-compose.yml",
+    "workspaceMount": "/workspace",
+    "workspaceFolder": "/workspace",
+    "service": "devcontainer",
+    "shutdownAction": "stopCompose",
     "runArgs": [
         "--runtime=nvidia"
     ],
     "extensions": [
-        "ms-python.python"
+        "ms-python.python",
+        "ms-azuretools.vscode-docker"
     ]
 }

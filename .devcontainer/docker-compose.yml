@@ -1,0 +1,17 @@
+version: '3'
+services:
+  devcontainer:
+  
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile                                                                                                              
+      args:
+        HOST_USER_UID: 1000
+        HOST_USER_GID: 1000
+
+    volumes:
+      - ..:/workspace
+      - ~/.gitconfig:/home/containeruser/.gitconfig
+      - ~/.ssh:/home/containeruser/.ssh
+
+    command: sleep infinity 
