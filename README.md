@@ -126,6 +126,11 @@ Install requirements
 $ pip install -r requirements.txt
 ```
 
+Install the backend of your choice.
+```
+$ pip install tensorflow
+```
+
 Run tests
 ```sh
 $ pytest tests/test_siamese.py
