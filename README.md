@@ -47,7 +47,7 @@ $ python examples/mnist_example.py
 
 To run the mnist siamese pretrained example:
 ```
-$ python examples/mnist_example.py
+$ python examples/mnist_siamese_example.py
 ```
 
 ## Usage
