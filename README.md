@@ -24,9 +24,30 @@ $ pip install git+https://github.com/aspamers/siamese
 ```
 
 The module will install keras and numpy but no back-end (like tensorflow). This is deliberate since it leaves the module 
-decoupled from any back-end and gives you a chance to install whatever version you prefer. To install tensorflow:
+decoupled from any back-end and gives you a chance to install whatever backend you prefer. 
+
+To install tensorflow:
 ```
 $ pip install tensorflow
+```
+
+To install tensorflow with gpu support:
+```
+$ pip install tensorflow-gpu
+```
+
+## To run examples
+
+With the activated virtual environment with the installed python package run the following commands.
+
+To run the mnist baseline example:
+```
+$ python examples/mnist_example.py
+```
+
+To run the mnist siamese pretrained example:
+```
+$ python examples/mnist_example.py
 ```
 
 ## Usage
@@ -109,3 +130,10 @@ Run tests
 ```sh
 $ pytest tests/test_siamese.py
 ```
+
+## Development container
+To set up the vscode development container follow the instructions at the link provided:
+https://github.com/aspamers/vscode-devcontainer
+
+You will also need to install the nvidia docker gpu passthrough layer:
+https://github.com/NVIDIA/nvidia-docker
