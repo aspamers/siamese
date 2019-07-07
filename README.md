@@ -72,7 +72,7 @@ y_test = np.random.randint(num_classes, size=30)
 ```python
 def create_base_model(input_shape):
     model_input = Input(shape=input_shape)
-    embedding = Flatten()(embedding)
+    embedding = Flatten()(model_input)
     embedding = Dense(128)(embedding)
     return Model(model_input, embedding)
 ```
