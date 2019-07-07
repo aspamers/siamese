@@ -42,12 +42,12 @@ With the activated virtual environment with the installed python package run the
 
 To run the mnist baseline example:
 ```
-$ python examples/mnist_example.py
+$ python mnist_example.py
 ```
 
 To run the mnist siamese pretrained example:
 ```
-$ python examples/mnist_siamese_example.py
+$ python mnist_siamese_example.py
 ```
 
 ## Usage
@@ -98,7 +98,7 @@ def create_head_model(embedding_shape):
 ```python
 base_model = create_base_model(input_shape)
 head_model = create_head_model(base_model.output_shape)
-siamese_network = SiameseNetwork(base_model, head_model, num_classes)
+siamese_network = SiameseNetwork(base_model, head_model)
 ```
 
 - Compile the model

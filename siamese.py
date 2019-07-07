@@ -17,7 +17,7 @@ class SiameseNetwork:
     public methods that allow it to behave similarly to a regular Keras model by passing kwargs through to the
     underlying keras model object where possible. This allows Keras features like callbacks and metrics to be used.
     """
-    def __init__(self, base_model, head_model, num_classes):
+    def __init__(self, base_model, head_model):
         """
         Construct the siamese model class with the following structure.
 
@@ -32,12 +32,10 @@ class SiameseNetwork:
         :param head_model: The discriminator model.
         * Input shape must be equal to that of embedding
         * Output shape must be equal to 1..
-        :param num_classes: The number of classes in the data
         """
         # Set essential parameters
         self.base_model = base_model
         self.head_model = head_model
-        self.num_classes = num_classes
 
         # Get input shape from base model
         self.input_shape = self.base_model.input_shape[1:]
@@ -146,7 +144,7 @@ class SiameseNetwork:
         head = self.head_model([processed_a, processed_b])
         self.siamese_model = Model([input_a, input_b], head)
 
-    def __create_pairs(self, x, class_indices, batch_size):
+    def __create_pairs(self, x, class_indices, batch_size, num_classes):
         """
         Create a numpy array of positive and negative pairs and their associated labels.
 
@@ -157,14 +155,15 @@ class SiameseNetwork:
         * element_index = class_indices[class][index]
         * element = x[element_index]
         :param batch_size: The number of pair samples to create.
+        :param num_classes: number of classes in the supplied input data
         :return: A tuple of (Numpy array of pairs, Numpy array of labels)
         """
         num_pairs = batch_size / 2
-        positive_pairs, positive_labels = self.__create_positive_pairs(x, class_indices, num_pairs)
-        negative_pairs, negative_labels = self.__create_negative_pairs(x, class_indices, num_pairs)
+        positive_pairs, positive_labels = self.__create_positive_pairs(x, class_indices, num_pairs, num_classes)
+        negative_pairs, negative_labels = self.__create_negative_pairs(x, class_indices, num_pairs, num_classes)
         return np.array(positive_pairs + negative_pairs), np.array(positive_labels + negative_labels)
 
-    def __create_positive_pairs(self, x, class_indices, num_positive_pairs):
+    def __create_positive_pairs(self, x, class_indices, num_positive_pairs, num_classes):
         """
         Create a list of positive pairs and labels. A positive pair is defined as two input samples of the same class.
 
@@ -175,12 +174,14 @@ class SiameseNetwork:
         * element_index = class_indices[class][index]
         * element = x[element_index]
         :param num_positive_pairs: The number of positive pair samples to create.
+        :param num_classes: number of classes in the supplied input data
         :return: A tuple of (python list of positive pairs, python list of positive labels)
         """
         positive_pairs = []
         positive_labels = []
+
         for _ in range(num_positive_pairs):
-            class_1 = random.randint(0, self.num_classes - 1)
+            class_1 = random.randint(0, num_classes - 1)
             num_elements = len(class_indices[class_1])
 
             index_1, index_2 = self.__randint_unequal(0, num_elements - 1)
@@ -190,7 +191,7 @@ class SiameseNetwork:
             positive_labels.append([1.0])
         return positive_pairs, positive_labels
 
-    def __create_negative_pairs(self, x, class_indices, num_negative_pairs):
+    def __create_negative_pairs(self, x, class_indices, num_negative_pairs, num_classes):
         """
         Create a list of negative pairs and labels. A negative pair is defined as two input samples of different class.
 
@@ -201,13 +202,14 @@ class SiameseNetwork:
         * element_index = class_indices[class][index]
         * element = x[element_index]
         :param num_negative_pairs: The number of negative pair samples to create.
+        :param num_classes: number of classes in the supplied input data
         :return: A tuple of (python list of negative pairs, python list of negative labels)
         """
         negative_pairs = []
         negative_labels = []
 
         for _ in range(num_negative_pairs):
-            cls_1, cls_2 = self.__randint_unequal(0, self.num_classes - 1)
+            cls_1, cls_2 = self.__randint_unequal(0, num_classes - 1)
 
             index_1 = random.randint(0, len(class_indices[cls_1]) - 1)
             index_2 = random.randint(0, len(class_indices[cls_2]) - 1)
@@ -225,9 +227,9 @@ class SiameseNetwork:
         :param batch_size: The number of pair samples to create per batch.
         :return:
         """
-        class_indices = self.__get_class_indices(y)
+        class_indices, num_classes = self.__get_class_indices(y)
         while True:
-            pairs, labels = self.__create_pairs(x, class_indices, batch_size)
+            pairs, labels = self.__create_pairs(x, class_indices, batch_size, num_classes)
 
             # The siamese network expects two inputs and one output. Split the pairs into a list of inputs.
             yield [pairs[:, 0], pairs[:, 1]], labels
@@ -242,7 +244,8 @@ class SiameseNetwork:
         :param y: Integer class labels
         :return: Python list of lists
         """
-        return [np.where(y == i)[0] for i in range(self.num_classes)]
+        num_classes = np.max(y)
+        return [np.where(y == i)[0] for i in range(num_classes)], num_classes
 
     @staticmethod
     def __randint_unequal(lower, upper):

@@ -56,7 +56,7 @@ def test_siamese():
     # Create siamese neural network
     base_model = create_base_model(input_shape)
     head_model = create_head_model(base_model.output_shape)
-    siamese_network = SiameseNetwork(base_model, head_model, num_classes)
+    siamese_network = SiameseNetwork(base_model, head_model)
 
     # Prepare siamese network for training
     siamese_network.compile(loss='binary_crossentropy',

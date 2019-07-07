@@ -89,7 +89,7 @@ epochs = 999999
 base_model = create_base_model(input_shape)
 head_model = create_head_model(base_model.output_shape)
 
-siamese_network = SiameseNetwork(base_model, head_model, num_classes)
+siamese_network = SiameseNetwork(base_model, head_model)
 siamese_network.compile(loss='binary_crossentropy', optimizer=keras.optimizers.adam(), metrics=['accuracy'])
 
 siamese_checkpoint_path = "./siamese_checkpoint"
