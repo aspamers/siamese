@@ -5,9 +5,6 @@
     "workspaceFolder": "/workspace",
     "service": "devcontainer",
     "shutdownAction": "stopCompose",
-    "runArgs": [
-        "--runtime=nvidia"
-    ],
     "extensions": [
         "ms-python.python",
         "ms-azuretools.vscode-docker"

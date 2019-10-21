@@ -1,4 +1,11 @@
 FROM tensorflow/tensorflow:latest-gpu
+FROM tensorflow/tensorflow:1.12.3-gpu
+
+## Install updates and network tool
+RUN apt-get update -y && apt-get upgrade -y && apt install net-tools -y
+
+## Install ui server
+RUN apt-get install python-tk -y
 
 ## Install basic functions
 RUN apt-get install sudo -y

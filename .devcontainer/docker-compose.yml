@@ -1,4 +1,4 @@
-version: '3'
+version: '2.3'
 services:
   devcontainer:
   
@@ -9,9 +9,15 @@ services:
         HOST_USER_UID: 1000
         HOST_USER_GID: 1000
 
+    network_mode: host
+    environment:
+      - DISPLAY=$DISPLAY
+    runtime: nvidia
+
     volumes:
       - ..:/workspace
       - ~/.gitconfig:/home/containeruser/.gitconfig
       - ~/.ssh:/home/containeruser/.ssh
+      - "$HOME/.Xauthority:/root/.Xauthority:rw"
 
     command: sleep infinity 
