@@ -18,6 +18,5 @@ services:
       - ..:/workspace
       - ~/.gitconfig:/home/containeruser/.gitconfig
       - ~/.ssh:/home/containeruser/.ssh
-      - "$HOME/.Xauthority:/root/.Xauthority:rw"
 
     command: sleep infinity 
