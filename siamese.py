@@ -180,7 +180,7 @@ class SiameseNetwork:
         positive_pairs = []
         positive_labels = []
 
-        for _ in range(num_positive_pairs):
+        for _ in range(int(num_positive_pairs)):
             class_1 = random.randint(0, num_classes - 1)
             num_elements = len(class_indices[class_1])
 
@@ -208,7 +208,7 @@ class SiameseNetwork:
         negative_pairs = []
         negative_labels = []
 
-        for _ in range(num_negative_pairs):
+        for _ in range(int(num_negative_pairs)):
             cls_1, cls_2 = self.__randint_unequal(0, num_classes - 1)
 
             index_1 = random.randint(0, len(class_indices[cls_1]) - 1)
