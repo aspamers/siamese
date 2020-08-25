@@ -244,7 +244,7 @@ class SiameseNetwork:
         :param y: Integer class labels
         :return: Python list of lists
         """
-        num_classes = np.max(y)
+        num_classes = np.max(y) + 1
         return [np.where(y == i)[0] for i in range(num_classes)], num_classes
 
     @staticmethod
